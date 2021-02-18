@@ -9,9 +9,10 @@ import (
 )
 
 func main() {
-	cp := copybot.NewCopyBot()
-	if os.Getenv("COPYBOT_LISTEN_ADDR") == "" {
+	cp := copybot.New()
+	listenAddr, ok := os.LookupEnv("COPYBOT_LISTEN_ADDR")
+	if !ok {
 		log.Fatal("Set COPYBOT_LISTEN_ADDR to a proper listen address!")
 	}
-	log.Fatal(http.ListenAndServe(os.Getenv("COPYBOT_LISTEN_ADDR"), cp))
+	log.Fatal(http.ListenAndServe(listenAddr, cp))
 }
