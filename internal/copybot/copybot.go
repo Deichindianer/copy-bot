@@ -2,7 +2,6 @@ package copybot
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
 
 	md "github.com/JohannesKaufmann/html-to-markdown"
@@ -10,15 +9,13 @@ import (
 )
 
 type CopyBot struct {
-	mux        *gin.Engine
-	httpClient *http.Client
-	converter  *md.Converter
+	mux       *gin.Engine
+	converter *md.Converter
 }
 
-func NewCopyBot() *CopyBot {
+func New() *CopyBot {
 	cp := new(CopyBot)
 	cp.mux = gin.New()
-	cp.httpClient = http.DefaultClient
 	cp.converter = md.NewConverter("", true, nil)
 	cp.mux.GET("/convert", cp.convert)
 	return cp
@@ -26,20 +23,12 @@ func NewCopyBot() *CopyBot {
 
 func (cp *CopyBot) convert(c *gin.Context) {
 	url := c.Query("url")
-	resp, err := cp.httpClient.Get(url)
-	if err != nil {
-		c.String(http.StatusInternalServerError, fmt.Sprintf("failed to get url: %s", err))
-	}
-	html, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		c.String(http.StatusInternalServerError, fmt.Sprintf("failed to read html: %s", err))
-	}
-	markdown, err := cp.converter.ConvertBytes(html)
+	markdown, err := cp.converter.ConvertURL(url)
 	if err != nil {
 		c.String(http.StatusInternalServerError, fmt.Sprintf("failed to convert html: %s", err))
+		return
 	}
-	c.String(http.StatusOK, string(markdown))
-	return
+	c.String(http.StatusOK, markdown)
 }
 
 func (cp *CopyBot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
